@@ -1,10 +1,12 @@
 This is a "plugin" for the Video Disk Recorder (VDR).
 
-Written by:                  Your Name <email@host.dom>
+Initially written by Louis Braun <louis DOT braun AT gmx DOT de> as an extension to the
+vdr-plugin-softhddevice;
+Forked by Lucian Muresan <lucianm AT users DOT sourceforge DOT net>
 
-Project's homepage:          URL
+Project's homepage:          https://github.com/lucianm/vdr-plugin-oglosd
 
-Latest version available at: URL
+Latest version available at: https://github.com/lucianm/vdr-plugin-oglosd/releases
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -13,3 +15,8 @@ the Free Software Foundation; either version 2 of the License, or
 See the file COPYING for more information.
 
 Description:
+
+This plugin was forked off from the OpenGL-enabled vdr-plugin-softhddevice (which is a fork of the original one itself :) ),
+in order to prepare developing a generic OpenGL Osd plugin usable on various platforms VDR runs on, independently of the
+output (device) plugin, from PCs to different SoCs, as suggested in the discussions at
+http://www.vdr-portal.de/board16-video-disk-recorder/board55-vdr-plugins/p1271861-softhddevice-mit-high-level-osd/#post1271861
