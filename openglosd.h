@@ -30,21 +30,8 @@ const struct {
 #include <memory>
 #include <queue>
 
-#include <vdr/plugin.h>
 #include <vdr/osd.h>
 #include <vdr/thread.h>
-
-#include "softhddev.h"
-
-extern "C"
-{
-#include <stdint.h>
-#include <libavcodec/avcodec.h>
-
-#include "audio.h"
-#include "video.h"
-#include "codec.h"
-}
 
 struct sOglImage {
     GLuint texture;

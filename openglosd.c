@@ -1,5 +1,8 @@
 #define __STL_CONFIG_H
 #include <algorithm>
+
+#include <vdr/device.h>
+
 #include "openglosd.h"
 
 /****************************************************************************************
@@ -1888,8 +1891,9 @@ cOglOsd::cOglOsd(int Left, int Top, uint Level, std::shared_ptr<cOglThread> oglT
     isSubtitleOsd = false;
     int osdWidth = 0;
     int osdHeight = 0;
+    double osdPixelAspect = 1.0;
 
-    VideoGetOsdSize(&osdWidth, &osdHeight);
+    cDevice::PrimaryDevice()->GetOsdSize(osdWidth, osdHeight, osdPixelAspect);
     dsyslog("[softhddev]cOglOsd osdLeft %d osdTop %d screenWidth %d screenHeight %d", Left, Top, osdWidth, osdHeight);
 
     //create vdpau output framebuffer

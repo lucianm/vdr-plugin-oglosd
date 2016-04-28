@@ -23,10 +23,15 @@ PLGCFG = $(call PKGCFG,plgcfg)
 #
 TMPDIR ?= /tmp
 
+_CFLAGS += $(shell pkg-config --cflags glew)
+LIBS += $(shell pkg-config --libs glew) -lglut
+_CFLAGS += $(shell pkg-config --cflags freetype2)
+LIBS   += $(shell pkg-config --libs freetype2)
+
 ### The compiler options:
 
-export CFLAGS   = $(call PKGCFG,cflags)
-export CXXFLAGS = $(call PKGCFG,cxxflags)
+export CFLAGS   = $(call PKGCFG,cflags) $(_CFLAGS)
+export CXXFLAGS = $(call PKGCFG,cxxflags) $(_CFLAGS) -std=c++0x
 
 ### The version number of VDR's plugin API:
 
@@ -53,7 +58,7 @@ DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
 
 ### The object files (add further files here):
 
-OBJS = $(PLUGIN).o
+OBJS = $(PLUGIN).o openglosd.o
 
 ### The main target:
 
@@ -102,7 +107,7 @@ install-i18n: $(I18Nmsgs)
 ### Targets:
 
 $(SOFILE): $(OBJS)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) -o $@
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
 
 install-lib: $(SOFILE)
 	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
