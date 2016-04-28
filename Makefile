@@ -23,6 +23,10 @@ PLGCFG = $(call PKGCFG,plgcfg)
 #
 TMPDIR ?= /tmp
 
+ifeq ($(DEBUG_GL),1)
+CONFIG += -DDEBUG_GL
+endif
+
 _CFLAGS += $(shell pkg-config --cflags glew)
 LIBS += $(shell pkg-config --libs glew) -lglut
 _CFLAGS += $(shell pkg-config --cflags freetype2)
