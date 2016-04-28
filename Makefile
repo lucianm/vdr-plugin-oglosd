@@ -27,15 +27,21 @@ ifeq ($(DEBUG_GL),1)
 CONFIG += -DDEBUG_GL
 endif
 
+ifeq ($(GLES2),1)
+CONFIG += -DUSE_GLES2
+_CFLAGS += -g
+LIBS += -L/usr/local/lib -lGLESv2 -lEGL
+else
 _CFLAGS += $(shell pkg-config --cflags glew)
 LIBS += $(shell pkg-config --libs glew) -lglut
+endif
 _CFLAGS += $(shell pkg-config --cflags freetype2)
 LIBS   += $(shell pkg-config --libs freetype2)
 
 ### The compiler options:
 
 export CFLAGS   = $(call PKGCFG,cflags) $(_CFLAGS)
-export CXXFLAGS = $(call PKGCFG,cxxflags) $(_CFLAGS) -std=c++0x
+export CXXFLAGS = $(call PKGCFG,cxxflags) $(_CFLAGS) -std=c++11
 
 ### The version number of VDR's plugin API:
 
@@ -58,7 +64,7 @@ SOFILE = libvdr-$(PLUGIN).so
 
 INCLUDES +=
 
-DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"'
+DEFINES += -DPLUGIN_NAME_I18N='"$(PLUGIN)"' $(CONFIG)
 
 ### The object files (add further files here):
 
