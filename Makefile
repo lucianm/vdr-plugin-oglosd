@@ -23,6 +23,10 @@ PLGCFG = $(call PKGCFG,plgcfg)
 #
 TMPDIR ?= /tmp
 
+ifeq ($(OSD_DEBUG),1)
+CONFIG += -DOSD_DEBUG
+endif
+
 ifeq ($(DEBUG_GL),1)
 CONFIG += -DDEBUG_GL
 endif
