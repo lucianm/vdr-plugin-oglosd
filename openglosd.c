@@ -71,7 +71,7 @@ void ConvertColor(const GLint &colARGB, glm::vec4 &col) {
 void glCheckError(const char *stmt, const char *fname, int line) {
     GLint err = glGetError();
     if (err != GL_NO_ERROR)
-        esyslog("[softhddev]GL Error (0x%08x): %s failed at %s:%i\n", err, stmt, fname, line);
+        esyslog("[openglosd]GL Error (0x%08x): %s failed at %s:%i\n", err, stmt, fname, line);
 }
 
 #ifdef DEBUG_GL
@@ -87,7 +87,7 @@ void glCheckError(const char *stmt, const char *fname, int line) {
 void eglCheckError(const char *stmt, const char *fname, int line) {
     EGLint err = eglGetError();
     if (err != EGL_SUCCESS)
-        esyslog("[softhddev]EGL ERROR (0x%08x): %s failed at %s:%i\n", err, stmt, fname, line);
+        esyslog("[openglosd]EGL ERROR (0x%08x): %s failed at %s:%i\n", err, stmt, fname, line);
 }
 
 #ifdef DEBUG_GL
@@ -363,17 +363,17 @@ bool cShader::Load(eShaderType type) {
             fragmentCode = textFragmentShader;
             break;
         default:
-            esyslog("[softhddev]unknown shader type\n");
+            esyslog("[openglosd]unknown shader type\n");
             break;
     }
 
     if (vertexCode == NULL || fragmentCode == NULL) {
-        esyslog("[softhddev]ERROR reading shader\n");
+        esyslog("[openglosd]ERROR reading shader\n");
         return false;
     }
 
     if (!Compile(vertexCode, fragmentCode)) {
-        esyslog("[softhddev]ERROR compiling shader\n");
+        esyslog("[openglosd]ERROR compiling shader\n");
         return false;
     }
     return true;
@@ -441,14 +441,14 @@ bool cShader::CheckCompileErrors(GLuint object, bool program) {
         GL_CHECK(glGetShaderiv(object, GL_COMPILE_STATUS, &success));
         if (!success) {
             GL_CHECK(glGetShaderInfoLog(object, 1024, NULL, infoLog));
-            esyslog("[softhddev]:SHADER: Compile-time error: Type: %d - %s", type, infoLog);
+            esyslog("[openglosd]:SHADER: Compile-time error: Type: %d - %s", type, infoLog);
             return false;
         }
     } else {
         GL_CHECK(glGetProgramiv(object, GL_LINK_STATUS, &success));
         if (!success) {
             GL_CHECK(glGetProgramInfoLog(object, 1024, NULL, infoLog));
-            esyslog("[softhddev]:SHADER: Link-time error: Type: %d", type);
+            esyslog("[openglosd]:SHADER: Link-time error: Type: %d", type);
             return false;
         }
     }
@@ -539,7 +539,7 @@ cOglFont::cOglFont(const char *fontName, int charHeight) : name(fontName) {
 
     int error = FT_New_Face(ftLib, fontName, 0, &face);
     if (error)
-        esyslog("[softhddev]ERROR: failed to open %s!", *name);
+        esyslog("[openglosd]ERROR: failed to open %s!", *name);
 
     FT_Set_Char_Size(face, 0, charHeight * 64, 0, 0);
     height = (face->size->metrics.ascender - face->size->metrics.descender + 63) / 64;
@@ -567,7 +567,7 @@ cOglFont *cOglFont::Get(const char *name, int charHeight) {
 void cOglFont::Init(void) {
     fonts = new cList<cOglFont>;
     if (FT_Init_FreeType(&ftLib))
-        esyslog("[softhddev]failed to initialize FreeType library!");
+        esyslog("[openglosd]failed to initialize FreeType library!");
     initiated = true;
 }
 
@@ -598,7 +598,7 @@ cOglGlyph* cOglFont::Glyph(uint charCode) const {
     // Load glyph image into the slot (erase previous one):
     int error = FT_Load_Glyph(face, glyph_index, loadFlags);
     if (error) {
-        esyslog("[softhddev]FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
+        esyslog("[openglosd]FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
         return NULL;
     }
 
@@ -606,7 +606,7 @@ cOglGlyph* cOglFont::Glyph(uint charCode) const {
     FT_Stroker stroker;
     error = FT_Stroker_New( ftLib, &stroker );
     if (error) {
-        esyslog("[softhddev]FT_Stroker_New FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
+        esyslog("[openglosd]FT_Stroker_New FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
         return NULL;
     }
     float outlineWidth = 0.25f;
@@ -619,20 +619,20 @@ cOglGlyph* cOglFont::Glyph(uint charCode) const {
     
     error = FT_Get_Glyph(face->glyph, &ftGlyph);
     if (error) {
-        esyslog("[softhddev]FT_Get_Glyph FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
+        esyslog("[openglosd]FT_Get_Glyph FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
         return NULL;
     }
 
     error = FT_Glyph_StrokeBorder( &ftGlyph, stroker, 0, 1 );
     if ( error ) {
-        esyslog("[softhddev]FT_Glyph_StrokeBorder FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
+        esyslog("[openglosd]FT_Glyph_StrokeBorder FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
         return NULL;
     }
     FT_Stroker_Done(stroker);
 
     error = FT_Glyph_To_Bitmap( &ftGlyph, FT_RENDER_MODE_NORMAL, 0, 1);
     if (error) {
-        esyslog("[softhddev]FT_Glyph_To_Bitmap FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
+        esyslog("[openglosd]FT_Glyph_To_Bitmap FT_Error (0x%02x) : %s\n", FT_Errors[error].code, FT_Errors[error].message);
         return NULL;
     }
 
@@ -703,7 +703,7 @@ bool cOglFb::Init(void) {
     GLenum fbstatus;
     GL_CHECK(fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER));
     if(fbstatus != GL_FRAMEBUFFER_COMPLETE) {
-        esyslog("[softhddev]ERROR: Framebuffer is not complete!\n");
+        esyslog("[openglosd]ERROR: Framebuffer is not complete!\n");
         return false;
     }
     return true;
@@ -796,7 +796,7 @@ bool cOglOutputFb::Init(void) {
     GLenum fbstatus;
     GL_CHECK(fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER));
     if(fbstatus != GL_FRAMEBUFFER_COMPLETE) {
-        esyslog("[softhddev]ERROR::cOglOutputFb: Framebuffer is not complete!");
+        esyslog("[openglosd]ERROR::cOglOutputFb: Framebuffer is not complete!");
         return false;
     }
     return true;
@@ -1514,7 +1514,7 @@ bool cOglCmdDrawText::Execute(void) {
         sym = symbols[i];
         cOglGlyph *g = f->Glyph(sym);
         if (!g) {
-            esyslog("[softhddev]ERROR: could not load glyph %x", sym);
+            esyslog("[openglosd]ERROR: could not load glyph %x", sym);
         }
 
         if ( limitX && xGlyph + g->AdvanceX() > limitX )
@@ -1798,7 +1798,7 @@ void cOglThread::DoCmd(cOglCmd* cmd) {
 
 int cOglThread::StoreImage(const cImage &image) {
     if (image.Width() > maxTextureSize || image.Height() > maxTextureSize) {
-        esyslog("[softhddev] cannot store image of %dpx x %dpx "
+        esyslog("[openglosd] cannot store image of %dpx x %dpx "
                 "(maximum size is %dpx x %dpx) - falling back to "
                 "cOsdProvider::StoreImageData()",
                 image.Width(), image.Height(),
@@ -1811,7 +1811,7 @@ int cOglThread::StoreImage(const cImage &image) {
     if (newMemUsed > maxCacheSize) {
         float cachedMB = memCached / 1024.0f / 1024.0f;
         float maxMB = maxCacheSize / 1024.0f / 1024.0f;
-        esyslog("[softhddev]Maximum size for GPU cache reached. Used: %.2fMB Max: %.2fMB", cachedMB, maxMB);
+        esyslog("[openglosd]Maximum size for GPU cache reached. Used: %.2fMB Max: %.2fMB", cachedMB, maxMB);
         return 0;
     }
     
@@ -1821,7 +1821,7 @@ int cOglThread::StoreImage(const cImage &image) {
 
     tColor *argb = MALLOC(tColor, imgSize);
     if (!argb) {
-        esyslog("[softhddev]memory allocation of %d kb for OSD image failed", imgSize  * sizeof(tColor) / 1024);
+        esyslog("[openglosd]memory allocation of %d kb for OSD image failed", imgSize  * sizeof(tColor) / 1024);
         ClearSlot(slot);
         slot = 0;
         return 0;
@@ -1839,7 +1839,7 @@ int cOglThread::StoreImage(const cImage &image) {
         cCondWait::SleepMs(2);
 
     if (imageRef->texture == GL_NONE) {
-        esyslog("[softhddev]failed to store OSD image texture! (%s)", timer.TimedOut() ? "timed out" : "allocation failed");
+        esyslog("[openglosd]failed to store OSD image texture! (%s)", timer.TimedOut() ? "timed out" : "allocation failed");
         DropImageData(slot);
         slot = 0;
     }
@@ -1895,39 +1895,39 @@ void cOglThread::DropImageData(int imageHandle) {
 
 void cOglThread::Action(void) {
     if (!InitOpenGL()) {
-        esyslog("[softhddev]Could not initiate OpenGL Context");
+        esyslog("[openglosd]Could not initiate OpenGL Context");
         Cleanup();
         startWait->Signal();
         return;
     }
-    dsyslog("[softhddev]OpenGL Context initialized");
+    dsyslog("[openglosd]OpenGL Context initialized");
 
     if (!InitShaders()) {
-        esyslog("[softhddev]Could not initiate Shaders");
+        esyslog("[openglosd]Could not initiate Shaders");
         Cleanup();
         startWait->Signal();
         return;
     }
-    dsyslog("[softhddev]Shaders initialized");
+    dsyslog("[openglosd]Shaders initialized");
 
     if (!InitVdpauInterop()) {
-        esyslog("[softhddev]: vdpau interop NOT initialized");
+        esyslog("[openglosd]: vdpau interop NOT initialized");
         Cleanup();
         startWait->Signal();
         return;
     }
-    dsyslog("[softhddev]vdpau interop initialized");
+    dsyslog("[openglosd]vdpau interop initialized");
 
     if (!InitVertexBuffers()) {
-        esyslog("[softhddev]: Vertex Buffers NOT initialized");
+        esyslog("[openglosd]: Vertex Buffers NOT initialized");
         Cleanup();
         startWait->Signal();
         return;
     }
-    dsyslog("[softhddev]Vertex buffers initialized");
+    dsyslog("[openglosd]Vertex buffers initialized");
 
     GL_CHECK(glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize));
-    dsyslog("[softhddev]Maximum Pixmap size: %dx%dpx", maxTextureSize, maxTextureSize);
+    dsyslog("[openglosd]Maximum Pixmap size: %dx%dpx", maxTextureSize, maxTextureSize);
 
     //now Thread is ready to do his job
     startWait->Signal();
@@ -1946,15 +1946,15 @@ void cOglThread::Action(void) {
         Unlock();
         //uint64_t start = cTimeMs::Now();
         cmd->Execute();
-        //esyslog("[softhddev]\"%s\", %dms, %d commands left, time %" PRIu64 "", cmd->Description(), (int)(cTimeMs::Now() - start), commands.size(), cTimeMs::Now());
+        //esyslog("[openglosd]\"%s\", %dms, %d commands left, time %" PRIu64 "", cmd->Description(), (int)(cTimeMs::Now() - start), commands.size(), cTimeMs::Now());
         delete cmd;
         if (stalled && commands.size() < OGL_CMDQUEUE_SIZE / 2)
             stalled = false;
     }
 
-    dsyslog("[softhddev]Cleaning up OpenGL stuff");
+    dsyslog("[openglosd]Cleaning up OpenGL stuff");
     Cleanup();
-    dsyslog("[softhddev]OpenGL Worker Thread Ended");
+    dsyslog("[openglosd]OpenGL Worker Thread Ended");
 }
 
 bool cOglThread::InitOpenGL(void) {
@@ -1969,10 +1969,10 @@ bool cOglThread::InitOpenGL(void) {
 
     EGL_CHECK(eglInitialize(eglDisplay, &iMajorVersion, &iMinorVersion));
 
-    EGL_CHECK(dsyslog("[softhddev]EGL Version: \"%s\"", eglQueryString(eglDisplay, EGL_VERSION)));
-    EGL_CHECK(dsyslog("[softhddev]EGL Vendor: \"%s\"", eglQueryString(eglDisplay, EGL_VENDOR)));
-    EGL_CHECK(dsyslog("[softhddev]EGL Extensions: \"%s\"", eglQueryString(eglDisplay, EGL_EXTENSIONS)));
-    EGL_CHECK(dsyslog("[softhddev]EGL APIs: \"%s\"", eglQueryString(eglDisplay, EGL_CLIENT_APIS)));
+    EGL_CHECK(dsyslog("[openglosd]EGL Version: \"%s\"", eglQueryString(eglDisplay, EGL_VERSION)));
+    EGL_CHECK(dsyslog("[openglosd]EGL Vendor: \"%s\"", eglQueryString(eglDisplay, EGL_VENDOR)));
+    EGL_CHECK(dsyslog("[openglosd]EGL Extensions: \"%s\"", eglQueryString(eglDisplay, EGL_EXTENSIONS)));
+    EGL_CHECK(dsyslog("[openglosd]EGL APIs: \"%s\"", eglQueryString(eglDisplay, EGL_CLIENT_APIS)));
 
     EGL_CHECK(eglChooseConfig(eglDisplay, config_attribute_list, &config, 1, &numConfig));
     EGL_CHECK(eglContext = eglCreateContext(eglDisplay, config, EGL_NO_CONTEXT, context_attribute_list));
@@ -1985,10 +1985,10 @@ bool cOglThread::InitOpenGL(void) {
 
     eglAcquireContext();
 
-    GL_CHECK(dsyslog("[softhddev]GL Version: \"%s\"", glGetString(GL_VERSION)));
-    GL_CHECK(dsyslog("[softhddev]GL Vendor: \"%s\"", glGetString(GL_VENDOR)));
-    GL_CHECK(dsyslog("[softhddev]GL Extensions: \"%s\"", glGetString(GL_EXTENSIONS)));
-    GL_CHECK(dsyslog("[softhddev]GL Renderer: \"%s\"", glGetString(GL_RENDERER)));
+    GL_CHECK(dsyslog("[openglosd]GL Version: \"%s\"", glGetString(GL_VERSION)));
+    GL_CHECK(dsyslog("[openglosd]GL Vendor: \"%s\"", glGetString(GL_VENDOR)));
+    GL_CHECK(dsyslog("[openglosd]GL Extensions: \"%s\"", glGetString(GL_EXTENSIONS)));
+    GL_CHECK(dsyslog("[openglosd]GL Renderer: \"%s\"", glGetString(GL_RENDERER)));
 
     glesInit();
 #else
@@ -1999,7 +1999,7 @@ bool cOglThread::InitOpenGL(void) {
             displayName = ":0.0";
         }
     }
-    dsyslog("[softhddev]OpenGL using display %s", displayName);
+    dsyslog("[openglosd]OpenGL using display %s", displayName);
 
     int argc = 3;
     char* buffer[3];
@@ -2018,7 +2018,7 @@ bool cOglThread::InitOpenGL(void) {
     free(buffer[2]);
     GLenum err = glewInit();
     if( err != GLEW_OK) {
-        esyslog("[softhddev]glewInit failed, aborting\n");
+        esyslog("[openglosd]glewInit failed, aborting\n");
         return false;
     }
 #endif
@@ -2180,7 +2180,7 @@ void cOglPixmap::DrawImage(const cPoint &Point, int ImageHandle) {
 }
 
 void cOglPixmap::DrawPixel(const cPoint &Point, tColor Color) {
-    esyslog("[softhddev] DrawPixel %d %d color %x not implemented in OpenGl OSD", Point.X(), Point.X(), Color);
+    esyslog("[openglosd] DrawPixel %d %d color %x not implemented in OpenGl OSD", Point.X(), Point.X(), Color);
 }
 
 void cOglPixmap::DrawBitmap(const cPoint &Point, const cBitmap &Bitmap, tColor ColorFg, tColor ColorBg, bool Overlay) {
@@ -2294,19 +2294,19 @@ void cOglPixmap::DrawSlope(const cRect &Rect, tColor Color, int Type) {
 }
 
 void cOglPixmap::Render(const cPixmap *Pixmap, const cRect &Source, const cPoint &Dest) {
-    esyslog("[softhddev] Render %d %d %d not implemented in OpenGl OSD", Pixmap->ViewPort().X(), Source.X(), Dest.X());
+    esyslog("[openglosd] Render %d %d %d not implemented in OpenGl OSD", Pixmap->ViewPort().X(), Source.X(), Dest.X());
 }
 
 void cOglPixmap::Copy(const cPixmap *Pixmap, const cRect &Source, const cPoint &Dest) {
-    esyslog("[softhddev] Copy %d %d %d not implemented in OpenGl OSD", Pixmap->ViewPort().X(), Source.X(), Dest.X());
+    esyslog("[openglosd] Copy %d %d %d not implemented in OpenGl OSD", Pixmap->ViewPort().X(), Source.X(), Dest.X());
 }
 
 void cOglPixmap::Scroll(const cPoint &Dest, const cRect &Source) {
-    esyslog("[softhddev] Scroll %d %d not implemented in OpenGl OSD", Source.X(), Dest.X());
+    esyslog("[openglosd] Scroll %d %d not implemented in OpenGl OSD", Source.X(), Dest.X());
 }
 
 void cOglPixmap::Pan(const cPoint &Dest, const cRect &Source) {
-    esyslog("[softhddev] Pan %d %d not implemented in OpenGl OSD", Source.X(), Dest.X());
+    esyslog("[openglosd] Pan %d %d not implemented in OpenGl OSD", Source.X(), Dest.X());
 }
 
 /******************************************************************************
@@ -2323,7 +2323,7 @@ cOglOsd::cOglOsd(int Left, int Top, uint Level, std::shared_ptr<cOglThread> oglT
     double osdPixelAspect = 1.0;
 
     cDevice::PrimaryDevice()->GetOsdSize(osdWidth, osdHeight, osdPixelAspect);
-    dsyslog("[softhddev]cOglOsd osdLeft %d osdTop %d screenWidth %d screenHeight %d", Left, Top, osdWidth, osdHeight);
+    dsyslog("[openglosd]cOglOsd osdLeft %d osdTop %d screenWidth %d screenHeight %d", Left, Top, osdWidth, osdHeight);
 
     //create vdpau output framebuffer
     if (!oFb) {
@@ -2368,7 +2368,7 @@ cPixmap *cOglOsd::CreatePixmap(int Layer, const cRect &ViewPort, const cRect &Dr
     int height = DrawPort.IsEmpty() ? ViewPort.Height() : DrawPort.Height();
 
     if (width > oglThread->MaxTextureSize() || height > oglThread->MaxTextureSize()) {
-        esyslog("[softhddev] cannot allocate pixmap of %dpx x %dpx, clipped to %dpx x %dpx!", 
+        esyslog("[openglosd] cannot allocate pixmap of %dpx x %dpx, clipped to %dpx x %dpx!", 
                     width, height, std::min(width, oglThread->MaxTextureSize()), std::min(height, oglThread->MaxTextureSize()));
         width = std::min(width, oglThread->MaxTextureSize());
         height = std::min(height, oglThread->MaxTextureSize());
@@ -2422,7 +2422,7 @@ void cOglOsd::Flush(void) {
         return;
     //clear buffer
     //uint64_t start = cTimeMs::Now();
-    //dsyslog("[softhddev]Start Flush at %" PRIu64 "", cTimeMs::Now());
+    //dsyslog("[openglosd]Start Flush at %" PRIu64 "", cTimeMs::Now());
     oglThread->DoCmd(new cOglCmdFill(bFb, clrTransparent));
 
     //render pixmap textures blended to buffer
@@ -2444,7 +2444,7 @@ void cOglOsd::Flush(void) {
     }
     //copy buffer to Vdpau output framebuffer
     oglThread->DoCmd(new cOglCmdCopyBufferToOutputFb(bFb, oFb, Left(), Top()));
-    //dsyslog("[softhddev]End Flush at %" PRIu64 ", duration %d", cTimeMs::Now(), (int)(cTimeMs::Now()-start));
+    //dsyslog("[openglosd]End Flush at %" PRIu64 ", duration %d", cTimeMs::Now(), (int)(cTimeMs::Now()-start));
 }
 
 void cOglOsd::DrawScaledBitmap(int x, int y, const cBitmap &Bitmap, double FactorX, double FactorY, bool AntiAlias) {
