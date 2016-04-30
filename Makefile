@@ -11,7 +11,7 @@ PLUGIN = oglosd
 
 ### The version number of this plugin (taken from the main source file):
 
-VERSION = $(shell grep 'static const char \*VERSION *=' $(PLUGIN).c | awk '{ print $$6 }' | sed -e 's/[";]//g')
+VERSION = $(shell grep '\#define PSL_$(PLUGIN)_VERSION ' $(PLUGIN).h | cut -d' ' -f3 | sed -e 's/[";]//g')
 
 ### The directory environment:
 
@@ -22,6 +22,9 @@ LOCDIR = $(call PKGCFG,locdir)
 PLGCFG = $(call PKGCFG,plgcfg)
 #
 TMPDIR ?= /tmp
+PREFIX ?= /usr
+INCDIR ?= $(PREFIX)/include
+PCDIR ?= $(PREFIX)/lib/pkgconfig
 
 ifeq ($(OSD_DEBUG),1)
 CONFIG += -DOSD_DEBUG
@@ -31,16 +34,19 @@ ifeq ($(DEBUG_GL),1)
 CONFIG += -DDEBUG_GL
 endif
 
+### Additional libraries to link against, put them in LIBSPSL for they will then also be exported in the pc file:
 ifeq ($(GLES2),1)
 CONFIG += -DUSE_GLES2
 _CFLAGS += -g
-LIBS += -L/usr/local/lib -lGLESv2 -lEGL
+LIBSPSL += -L/usr/local/lib -lGLESv2 -lEGL
 else
 _CFLAGS += $(shell pkg-config --cflags glew)
-LIBS += $(shell pkg-config --libs glew) -lglut
+LIBSPSL += $(shell pkg-config --libs glew) -lglut
 endif
 _CFLAGS += $(shell pkg-config --cflags freetype2)
-LIBS   += $(shell pkg-config --libs freetype2)
+LIBSPSL   += $(shell pkg-config --libs freetype2)
+
+LIBS += $(LIBSPSL)
 
 ### The compiler options:
 
@@ -57,12 +63,12 @@ APIVERSION = $(call PKGCFG,apiversion)
 
 ### The name of the distribution archive:
 
-ARCHIVE = $(PLUGIN)-$(VERSION)
+ARCHIVE = psl-$(PLUGIN)-$(VERSION)
 PACKAGE = vdr-$(ARCHIVE)
 
 ### The name of the shared object file:
 
-SOFILE = libvdr-$(PLUGIN).so
+SOFILE = libpsl-$(PLUGIN)
 
 ### Includes and Defines (add further entries here):
 
@@ -118,15 +124,45 @@ i18n: $(I18Nmo) $(I18Npot)
 
 install-i18n: $(I18Nmsgs)
 
+# generate pkg-config file:
+
+pc-file: vdr-psl-$(PLUGIN).pc
+
+.PHONY: vdr-psl-$(PLUGIN).pc
+vdr-psl-$(PLUGIN).pc:
+	@echo "Name: psl-$(PLUGIN)" > $@
+	@echo "Description: VDR Plugin Shared Library for rendering OSD with the help of OpenGL/ES in various output plugins" >> $@
+	@echo "URL: http://www.tvdr.de/" >> $@
+	@echo "Version: $(VERSION)" >> $@
+	@echo "Apiversion=$(VERSION)" >> $@
+	@echo "" >> $@
+	@echo "Requires:" >> $@
+	@echo "Requires.private:" >> $@
+	@echo "Libs=-lpsl-$(PLUGIN).$(APIVERSION)" >> $@
+	@echo "Libs.private=$(LIBSPSL)" >> $@
+	@echo "ldflags=-Wl,-L$(LIBDIR) -Wl,-rpath=$(LIBDIR)" >> $@
+
 ### Targets:
 
 $(SOFILE): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -shared $(OBJS) $(LIBS) -o $@
 
-install-lib: $(SOFILE)
-	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION)
+# install pkg-config file:
+install-pc: pc-file
+	if [ -n "$(PCDIR)" ] ; then\
+	   mkdir -p $(DESTDIR)$(PCDIR) ;\
+	   cp vdr-psl-$(PLUGIN).pc $(DESTDIR)$(PCDIR) ;\
+	   fi
 
-install: install-lib install-i18n
+# install headers:
+install-includes:
+	@mkdir -p $(DESTDIR)$(INCDIR)/vdr/psl-$(PLUGIN)
+	@cp -pLR *.h $(DESTDIR)$(INCDIR)/vdr/psl-$(PLUGIN)
+
+install-lib: $(SOFILE)
+	install -D $^ $(DESTDIR)$(LIBDIR)/$^.$(APIVERSION).so
+
+install: install-lib install-i18n install-pc install-includes
 
 dist: $(I18Npo) clean
 	@-rm -rf $(TMPDIR)/$(ARCHIVE)
@@ -138,4 +174,4 @@ dist: $(I18Npo) clean
 
 clean:
 	@-rm -f $(PODIR)/*.mo $(PODIR)/*.pot
-	@-rm -f $(OBJS) $(DEPFILE) *.so *.tgz core* *~
+	@-rm -f $(OBJS) $(DEPFILE) $(SOFILE) vdr-psl-$(PLUGIN).pc *.tgz core* *~

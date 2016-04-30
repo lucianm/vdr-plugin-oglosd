@@ -42,6 +42,13 @@ struct sOglImage {
     bool used;
 };
 
+extern void (*CbActivateOsd)(void);
+extern void * (*CbGetVDPAUDevice)(void);
+extern void * (*CbGetVDPAUProcAdress)(void);
+extern void * (*CbGetVDPAUOutputSurface)(void);
+extern void * (*CbGetVDPAUProc) (const uint32_t, void *, const char *);
+extern std::string X11DisplayName;
+
 /****************************************************************************************
 * Helpers
 ****************************************************************************************/

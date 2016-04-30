@@ -49,6 +49,14 @@ static const EGLint context_attribute_list[] =
 };
 #endif
 
+
+void (*CbActivateOsd)(void) = NULL;
+void * (*CbGetVDPAUDevice)(void) = NULL;
+void * (*CbGetVDPAUProcAdress)(void) = NULL;
+void * (*CbGetVDPAUOutputSurface)(void) = NULL;
+void * (*CbGetVDPAUProc) (const uint32_t, void *, const char *) = NULL;
+std::string X11DisplayName;
+
 /****************************************************************************************
 * Helpers
 ****************************************************************************************/
@@ -93,16 +101,16 @@ void eglCheckError(const char *stmt, const char *fname, int line) {
 
 void *glesInit(void)
 {
-    GetVDPAUProc(VDP_FUNC_ID_Init_NV, &glVDPAUInitNV, "glVDPAUInitNV");
-    GetVDPAUProc(VDP_FUNC_ID_Fini_NV, &glVDPAUFiniNV, "glVDPAUFiniNV");
-    GetVDPAUProc(VDP_FUNC_ID_RegisterOutputSurface_NV, &glVDPAURegisterOutputSurfaceNV, "glVDPAURegisterOutputSurfaceNV");
-    GetVDPAUProc(VDP_FUNC_ID_RegisterVideoSurface_NV, &glVDPAURegisterVideoSurfaceNV, "glVDPAURegisterVideoSurfaceNV");
-    GetVDPAUProc(VDP_FUNC_ID_IsSurface_NV, &glVDPAUIsSurfaceNV, "glVDPAUIsSurfaceNV");
-    GetVDPAUProc(VDP_FUNC_ID_UnregisterSurface_NV, &glVDPAUUnregisterSurfaceNV, "glVDPAUUnregisterSurfaceNV");
-    GetVDPAUProc(VDP_FUNC_ID_SurfaceAccess_NV, &glVDPAUSurfaceAccessNV, "glVDPAUSurfaceAccessNV");
-    GetVDPAUProc(VDP_FUNC_ID_MapSurfaces_NV, &glVDPAUMapSurfacesNV, "glVDPAUMapSurfacesNV");
-    GetVDPAUProc(VDP_FUNC_ID_UnmapSurfaces_NV, &glVDPAUUnmapSurfacesNV, "glVDPAUUnmapSurfacesNV");
-    GetVDPAUProc(VDP_FUNC_ID_GetSurfaceiv_NV, &glVDPAUGetSurfaceivNV, "glVDPAUGetSurfaceivNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_Init_NV, &glVDPAUInitNV, "glVDPAUInitNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_Fini_NV, &glVDPAUFiniNV, "glVDPAUFiniNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_RegisterOutputSurface_NV, &glVDPAURegisterOutputSurfaceNV, "glVDPAURegisterOutputSurfaceNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_RegisterVideoSurface_NV, &glVDPAURegisterVideoSurfaceNV, "glVDPAURegisterVideoSurfaceNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_IsSurface_NV, &glVDPAUIsSurfaceNV, "glVDPAUIsSurfaceNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_UnregisterSurface_NV, &glVDPAUUnregisterSurfaceNV, "glVDPAUUnregisterSurfaceNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_SurfaceAccess_NV, &glVDPAUSurfaceAccessNV, "glVDPAUSurfaceAccessNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_MapSurfaces_NV, &glVDPAUMapSurfacesNV, "glVDPAUMapSurfacesNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_UnmapSurfaces_NV, &glVDPAUUnmapSurfacesNV, "glVDPAUUnmapSurfacesNV");
+    CbGetVDPAUProc(VDP_FUNC_ID_GetSurfaceiv_NV, &glVDPAUGetSurfaceivNV, "glVDPAUGetSurfaceivNV");
 
     return NULL;
 }
@@ -766,7 +774,7 @@ cOglOutputFb::~cOglOutputFb(void) {
 
 bool cOglOutputFb::Init(void) {
     //fetching osd vdpau output surface from softhddevice
-    void *vdpauOutputSurface = GetVDPAUOutputSurface();
+    void *vdpauOutputSurface = CbGetVDPAUOutputSurface();
     GL_CHECK(glGenTextures(1, &texture));
 #ifdef USE_GLES2
     eglReleaseContext();
@@ -1142,7 +1150,7 @@ bool cOglCmdCopyBufferToOutputFb::Execute(void) {
 #endif
     oFb->Unbind();
 
-    ActivateOsd();
+    CbActivateOsd();
     return true;
 }
 
@@ -1984,7 +1992,7 @@ bool cOglThread::InitOpenGL(void) {
 
     glesInit();
 #else
-    const char *displayName = X11DisplayName;
+    const char *displayName = X11DisplayName.c_str();
     if (!displayName) {
         displayName = getenv("DISPLAY");
         if (!displayName) {
@@ -2035,8 +2043,8 @@ void cOglThread::DeleteShaders(void) {
 }
 
 bool cOglThread::InitVdpauInterop(void) {
-    void *vdpDevice = GetVDPAUDevice();
-    void *procAdress = GetVDPAUProcAdress();
+    void *vdpDevice = CbGetVDPAUDevice();
+    void *procAdress = CbGetVDPAUProcAdress();
 #ifdef USE_GLES2
     glGetError(); /* Clear error buffer */
     eglReleaseContext();
@@ -2325,7 +2333,7 @@ cOglOsd::cOglOsd(int Left, int Top, uint Level, std::shared_ptr<cOglThread> oglT
 }
 
 cOglOsd::~cOglOsd() {
-    OsdClose();
+    //// LUCIAN OsdClose();
     SetActive(false);
     oglThread->DoCmd(new cOglCmdDeleteFb(bFb));
 }

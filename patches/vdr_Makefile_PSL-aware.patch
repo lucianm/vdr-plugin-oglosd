@@ -1,0 +1,62 @@
+From 6d7f7d008d46af266df7c20552eb6a80f334a05a Mon Sep 17 00:00:00 2001
+From: Lucian Muresan <lucianm@users.sourceforge.net>
+Date: Fri, 29 Apr 2016 21:08:55 +0200
+Subject: [PATCH] PSL-aware Makefile (allows building PSLs in VDRs source tree)
+
+---
+ Makefile | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 9722036..c52322f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -196,6 +196,11 @@ install-i18n: i18n
+ 	@mkdir -p $(DESTDIR)$(LOCDIR)
+ 	cp -r $(LOCALEDIR)/* $(DESTDIR)$(LOCDIR)
+ 
++# The vdr-psl-*.pc files (for plugins using PSLs):
++
++psl-pc:
++	@(for i in `ls -A -I ".*" PLUGINS/src | grep psl-`; do $(MAKE) --no-print-directory -C "PLUGINS/src/$$i" LIBDIR="$(PLUGINDIR)/lib" VDRDIR="$(CWD)" pc-file; ln -fs PLUGINS/src/$$i/vdr-$$i.pc .; done)
++
+ # The 'include' directory (for plugins):
+ 
+ include-dir:
+@@ -203,14 +208,15 @@ include-dir:
+ 	@(cd include/vdr; for i in ../../*.h; do ln -fs $$i .; done)
+ 	@mkdir -p include/libsi
+ 	@(cd include/libsi; for i in ../../libsi/*.h; do ln -fs $$i .; done)
++	@(cd include/vdr; for i in `ls -A -I ".*" ../../PLUGINS/src | grep psl-`; do ln -fs ../../PLUGINS/src/$$i/include/$$i.h .; mkdir -p $$i; cd $$i; for j in ../../../PLUGINS/src/$$i/*.h; do ln -fs $$j .; done; done)
+ 
+ # Plugins:
+ 
+-plugins: include-dir vdr.pc
++plugins: include-dir vdr.pc psl-pc
+ 	@failed="";\
+ 	noapiv="";\
+ 	oldmakefile="";\
+-	for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do\
++	for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9\-]' | grep psl-` `ls -A -I "psl-*" $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do\
+ 	    echo; echo "*** Plugin $$i:";\
+ 	    # No APIVERSION: Skip\
+ 	    if ! grep -q "\$$(LIBDIR)/.*\$$(APIVERSION)" "$(PLUGINDIR)/src/$$i/Makefile" ; then\
+@@ -229,6 +235,7 @@ plugins: include-dir vdr.pc
+ 	    INCLUDES="-I$(CWD)/include"\
+ 	    $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" VDRDIR="$(CWD)" || failed="$$failed $$i";\
+ 	    if [ -n "$(LCLBLD)" ] ; then\
++	       (cd $(PLUGINDIR)/src/$$i; for l in `find -name 'libpsl-*' -o -name 'lib$$i-*.so'`; do install $$l $(LIBDIR)/`basename $$l`.$(APIVERSION).so; done);\
+ 	       (cd $(PLUGINDIR)/src/$$i; for l in `find -name "libvdr-*.so" -o -name "lib$$i-*.so"`; do install $$l $(LIBDIR)/`basename $$l`.$(APIVERSION); done);\
+ 	       if [ -d $(PLUGINDIR)/src/$$i/po ]; then\
+ 	          for l in `ls $(PLUGINDIR)/src/$$i/po/*.mo`; do\
+@@ -253,6 +260,7 @@ plugins: include-dir vdr.pc
+ clean-plugins:
+ 	@for i in `ls $(PLUGINDIR)/src | grep -v '[^a-z0-9]'`; do $(MAKE) --no-print-directory -C "$(PLUGINDIR)/src/$$i" VDRDIR="$(CWD)" clean; done
+ 	@-rm -f $(PLUGINDIR)/lib/lib*-*.so.$(APIVERSION)
++	@-rm -rf vdr-psl-*.pc
+ 
+ # Install the files (note that 'install-pc' must be first!):
+ 
+-- 
+1.9.2.msysgit.0
+

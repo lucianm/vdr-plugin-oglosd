@@ -1,8 +1,9 @@
-This is a "plugin" for the Video Disk Recorder (VDR).
+This is a PSL ("Plugin Shared Library") for the Video Disk Recorder (VDR).
 
 Initially written by Louis Braun <louis DOT braun AT gmx DOT de> as an extension to the
-vdr-plugin-softhddevice;
-Forked by Lucian Muresan <lucianm AT users DOT sourceforge DOT net>
+vdr-plugin-softhddevice, extended by Andreas Baierl <ichgeh AT imkreisrum DOT de> for GLES2,
+this code was forked by Lucian Muresan <lucianm AT users DOT sourceforge DOT net> and converted
+to a PSL.
 
 Project's homepage:          https://github.com/lucianm/vdr-plugin-oglosd
 
@@ -16,7 +17,11 @@ See the file COPYING for more information.
 
 Description:
 
-This plugin was forked off from the OpenGL-enabled vdr-plugin-softhddevice (which is a fork of the original one itself :) ),
-in order to prepare developing a generic OpenGL Osd plugin usable on various platforms VDR runs on, independently of the
-output (device) plugin, from PCs to different SoCs, as suggested in the discussions at
+This PSL was forked off from the OpenGL-enabled vdr-plugin-softhddevice (which is a fork of the original one itself :) ),
+in order to consolidate the generic code needed for an OpenGL Osd usable on various platforms VDR runs on, independently of the
+output (device) plugin, from PCs to different SoCs, as suggested in the discussions (sorry, only in German) at
 http://www.vdr-portal.de/board16-video-disk-recorder/board55-vdr-plugins/p1271861-softhddevice-mit-high-level-osd/#post1271861
+and
+http://www.vdr-portal.de/board17-developer/board21-vdr-plugins/128936-oglosd-aufruf-zum-feinschliff-der-konzepte/
+
+More to follow, as things settle down...
