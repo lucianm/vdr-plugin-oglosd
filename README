@@ -5,9 +5,9 @@ vdr-plugin-softhddevice, extended by Andreas Baierl <ichgeh AT imkreisrum DOT de
 this code was forked by Lucian Muresan <lucianm AT users DOT sourceforge DOT net> and converted
 to a PSL.
 
-Project's homepage:          https://github.com/lucianm/vdr-plugin-oglosd
+Project's homepage:          https://github.com/lucianm/vdr-psl-oglosd
 
-Latest version available at: https://github.com/lucianm/vdr-plugin-oglosd/releases
+Latest version available at: https://github.com/lucianm/vdr-psl-oglosd/releases
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
