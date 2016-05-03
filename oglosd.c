@@ -9,10 +9,6 @@
 #include "oglosd.h"
 #include "openglosd.h"
 
-bool (*CbIsDeviceSuspended) (void) = NULL;
-
-static int ConfigMaxSizeGPUImageCache = 128;  ///< maximum size of GPU mem to be used for image caching
-
 //////////////////////////////////////////////////////////////////////////////
 //	OSD provider
 //////////////////////////////////////////////////////////////////////////////
@@ -75,7 +71,7 @@ void cOglOsdProvider::OsdSizeChanged(void) {
 bool cOglOsdProvider::StartOpenGlThread(void) {
     //only try to start worker thread if shd is attached
     //otherwise glutInit() crashes
-    if (CbIsDeviceSuspended) {
+	if (pVMed->IsDeviceSuspended()) {
         return false;
     }
     if (oglThread.get()) {
@@ -86,7 +82,7 @@ bool cOglOsdProvider::StartOpenGlThread(void) {
     }
     cCondWait wait;
     dsyslog("[oglosd]Trying to start OpenGL Worker Thread");
-    oglThread.reset(new cOglThread(&wait, ConfigMaxSizeGPUImageCache));
+	oglThread.reset(new cOglThread(&wait, pVMed->MaxSizeGPUImageCache()));
     wait.Wait();
     if (oglThread->Active()) {
         dsyslog("[oglosd]OpenGL Worker Thread successfully started");

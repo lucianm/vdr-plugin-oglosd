@@ -42,13 +42,21 @@ struct sOglImage {
     bool used;
 };
 
-extern void (*CbActivateOsd)(void);
-extern void * (*CbGetVDPAUDevice)(void);
-extern void * (*CbGetVDPAUProcAdress)(void);
-extern void * (*CbGetVDPAUOutputSurface)(void);
-extern void * (*CbGetVDPAUProc) (const uint32_t, void *, const char *);
-extern std::string X11DisplayName;
+class IVdpauMediator {
+public:
+	virtual void CloseOsd() = 0;
+	virtual void ActivateOsd() = 0;
+	virtual void * GetVDPAUDevice() = 0;
+	virtual void * GetVDPAUProcAdress() = 0;
+	virtual void * GetVDPAUOutputSurface() = 0;
+	virtual void * GetVDPAUProc() = 0;
+	virtual bool IsDeviceSuspended() = 0;
+	virtual int & MaxSizeGPUImageCache() = 0;
+	virtual const char * GetX11DisplayName() = 0;
+	virtual void SetX11DisplayName(const char *) = 0;
+};
 
+extern IVdpauMediator * pVMed;
 /****************************************************************************************
 * Helpers
 ****************************************************************************************/

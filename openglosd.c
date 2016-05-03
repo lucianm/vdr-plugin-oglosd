@@ -5,6 +5,8 @@
 
 #include "openglosd.h"
 
+IVdpauMediator * pVMed = nullptr;
+
 #ifdef USE_GLES2
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,14 +50,6 @@ static const EGLint context_attribute_list[] =
     EGL_NONE
 };
 #endif
-
-
-void (*CbActivateOsd)(void) = NULL;
-void * (*CbGetVDPAUDevice)(void) = NULL;
-void * (*CbGetVDPAUProcAdress)(void) = NULL;
-void * (*CbGetVDPAUOutputSurface)(void) = NULL;
-void * (*CbGetVDPAUProc) (const uint32_t, void *, const char *) = NULL;
-std::string X11DisplayName;
 
 /****************************************************************************************
 * Helpers
@@ -101,16 +95,16 @@ void eglCheckError(const char *stmt, const char *fname, int line) {
 
 void *glesInit(void)
 {
-    CbGetVDPAUProc(VDP_FUNC_ID_Init_NV, &glVDPAUInitNV, "glVDPAUInitNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_Fini_NV, &glVDPAUFiniNV, "glVDPAUFiniNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_RegisterOutputSurface_NV, &glVDPAURegisterOutputSurfaceNV, "glVDPAURegisterOutputSurfaceNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_RegisterVideoSurface_NV, &glVDPAURegisterVideoSurfaceNV, "glVDPAURegisterVideoSurfaceNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_IsSurface_NV, &glVDPAUIsSurfaceNV, "glVDPAUIsSurfaceNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_UnregisterSurface_NV, &glVDPAUUnregisterSurfaceNV, "glVDPAUUnregisterSurfaceNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_SurfaceAccess_NV, &glVDPAUSurfaceAccessNV, "glVDPAUSurfaceAccessNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_MapSurfaces_NV, &glVDPAUMapSurfacesNV, "glVDPAUMapSurfacesNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_UnmapSurfaces_NV, &glVDPAUUnmapSurfacesNV, "glVDPAUUnmapSurfacesNV");
-    CbGetVDPAUProc(VDP_FUNC_ID_GetSurfaceiv_NV, &glVDPAUGetSurfaceivNV, "glVDPAUGetSurfaceivNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_Init_NV, &glVDPAUInitNV, "glVDPAUInitNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_Fini_NV, &glVDPAUFiniNV, "glVDPAUFiniNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_RegisterOutputSurface_NV, &glVDPAURegisterOutputSurfaceNV, "glVDPAURegisterOutputSurfaceNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_RegisterVideoSurface_NV, &glVDPAURegisterVideoSurfaceNV, "glVDPAURegisterVideoSurfaceNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_IsSurface_NV, &glVDPAUIsSurfaceNV, "glVDPAUIsSurfaceNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_UnregisterSurface_NV, &glVDPAUUnregisterSurfaceNV, "glVDPAUUnregisterSurfaceNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_SurfaceAccess_NV, &glVDPAUSurfaceAccessNV, "glVDPAUSurfaceAccessNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_MapSurfaces_NV, &glVDPAUMapSurfacesNV, "glVDPAUMapSurfacesNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_UnmapSurfaces_NV, &glVDPAUUnmapSurfacesNV, "glVDPAUUnmapSurfacesNV");
+    pVMed->GetVDPAUProc(VDP_FUNC_ID_GetSurfaceiv_NV, &glVDPAUGetSurfaceivNV, "glVDPAUGetSurfaceivNV");
 
     return NULL;
 }
@@ -774,7 +768,7 @@ cOglOutputFb::~cOglOutputFb(void) {
 
 bool cOglOutputFb::Init(void) {
     //fetching osd vdpau output surface from softhddevice
-    void *vdpauOutputSurface = CbGetVDPAUOutputSurface();
+    void *vdpauOutputSurface = pVMed->GetVDPAUOutputSurface();
     GL_CHECK(glGenTextures(1, &texture));
 #ifdef USE_GLES2
     eglReleaseContext();
@@ -1150,7 +1144,7 @@ bool cOglCmdCopyBufferToOutputFb::Execute(void) {
 #endif
     oFb->Unbind();
 
-    CbActivateOsd();
+    pVMed->ActivateOsd();
     return true;
 }
 
@@ -1992,7 +1986,7 @@ bool cOglThread::InitOpenGL(void) {
 
     glesInit();
 #else
-    const char *displayName = X11DisplayName.c_str();
+    const char *displayName = pVMed->GetX11DisplayName();
     if (!displayName) {
         displayName = getenv("DISPLAY");
         if (!displayName) {
@@ -2043,8 +2037,8 @@ void cOglThread::DeleteShaders(void) {
 }
 
 bool cOglThread::InitVdpauInterop(void) {
-    void *vdpDevice = CbGetVDPAUDevice();
-    void *procAdress = CbGetVDPAUProcAdress();
+    void *vdpDevice = pVMed->GetVDPAUDevice();
+    void *procAdress = pVMed->GetVDPAUProcAdress();
 #ifdef USE_GLES2
     glGetError(); /* Clear error buffer */
     eglReleaseContext();
@@ -2333,7 +2327,7 @@ cOglOsd::cOglOsd(int Left, int Top, uint Level, std::shared_ptr<cOglThread> oglT
 }
 
 cOglOsd::~cOglOsd() {
-    //// LUCIAN OsdClose();
+	pVMed->CloseOsd();
     SetActive(false);
     oglThread->DoCmd(new cOglCmdDeleteFb(bFb));
 }

@@ -11,7 +11,7 @@ PLUGIN = oglosd
 
 ### The version number of this plugin (taken from the main source file):
 
-VERSION = $(shell grep '\#define PSL_$(PLUGIN)_VERSION ' $(PLUGIN).h | cut -d' ' -f3 | sed -e 's/[";]//g')
+VERSION = $(shell grep '\#define PSL_OGLOSD_VERSION ' $(PLUGIN).h | cut -d' ' -f3 | sed -e 's/[";]//g')
 
 ### The directory environment:
 
@@ -134,12 +134,13 @@ vdr-psl-$(PLUGIN).pc:
 	@echo "Description: VDR Plugin Shared Library for rendering OSD with the help of OpenGL/ES in various output plugins" >> $@
 	@echo "URL: http://www.tvdr.de/" >> $@
 	@echo "Version: $(VERSION)" >> $@
-	@echo "Apiversion=$(VERSION)" >> $@
+	@echo "Apiversion=$(APIVERSION)" >> $@
 	@echo "" >> $@
 	@echo "Requires:" >> $@
 	@echo "Requires.private:" >> $@
-	@echo "Libs=-lpsl-$(PLUGIN).$(APIVERSION)" >> $@
+	@echo "Libs: -lpsl-$(PLUGIN).$(APIVERSION)" >> $@
 	@echo "Libs.private=$(LIBSPSL)" >> $@
+	@echo "Cflags: $(_CFLAGS)" >> $@
 	@echo "ldflags=-Wl,-L$(LIBDIR) -Wl,-rpath=$(LIBDIR)" >> $@
 
 ### Targets:
